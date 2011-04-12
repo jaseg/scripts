@@ -1,0 +1,147 @@
+#!/bin/bash
+
+function short {
+	s=$(date -d "+5 sec" $1)
+	if [ ${s:0:1} = 0 ]; then
+		echo ${s:1}
+	else
+		echo $s
+	fi
+}
+
+function short2 {
+	if [ $1 = 1 ]; then
+		echo ein
+	else
+		echo $1
+	fi
+}
+
+function short3 {
+	if [ $1 = 15 ]; then
+		echo viertel
+	else
+		echo $1
+	fi
+}
+
+function rund {
+	b=$1
+	let b=b+2; let b=(b*5); let b=(b-b%25)/5
+	echo $b
+}
+
+function tayme {
+	h=$(short +%I)
+	m=$(short +%M)
+	s=$(short +%S)
+	if [ $s -ge 30 ] ;then
+		let m=m+1
+	fi
+	if [ $m -eq 60 ] ;then
+		let h=h%12+1
+	fi
+	m=$(rund $m)
+	if [ $m -lt 30 ] ;then
+		if [ $m -eq 0 ] ;then
+			echo um $h
+		else
+			if [ $m -eq 25 ] ;then
+				let h=h%12+1
+				echo 5 vor halb $h
+			else
+				echo $(short3 $m) nach $h
+			fi
+		fi
+	else
+		let h=h%12+1
+		if [ $m -gt 35 ] ;then 
+			let m=60-m
+			if [ $m -eq 0 ] ;then
+				echo um $h
+			else
+				echo $(short3 $m) vor $h
+			fi
+		else
+			if [ $m -eq 35 ] ;then
+				echo 5 nach halb $h
+			else
+				echo halb $h
+			fi
+		fi
+	fi
+}
+
+function alert {
+	s=$(date +%s)
+	if [ "$s" -lt "$(date -d "$1" +%s)"  ] ;then
+		let t=$(date -d "+1 day $1" +%s)-s
+		echo $(date -d $"+${t}sec 00:00" +%H:%M)
+	else
+		let t=$(date -d $1 +%s)-s
+		echo $(date -d $"+${t}sec 00:00" +%H:%M)
+	fi
+}
+
+function alerts {
+	first=0
+	out=$(cat alertfile|
+	(read line
+	while [ $? -eq 0 ] ;do
+		tyxt=""
+		time=$(echo $line|cut -d" " -f 1)
+		rem=$(alert $time)
+		h=$(echo $rem|cut -d: -f 1)
+		m=$(echo $rem|cut -d: -f 2)
+		if [ "$h" -ge "$1" ] ;then
+			if [ "$h" -lt "$2" ] ;then
+				if [ "$m" -ge "$3" ] ;then
+					if [ "$m" -lt "$4" ] ;then
+						let m=m
+						let h=h
+						task=$(echo $line|cut -d" " -f 2-)
+						if [ $first -eq 0 ] ;then
+							if [ $h -eq 0 ] ;then
+								mess="In $(rund $m) Minuten "
+								tyxt="$tyxt$(echo $mess)$tyxt"
+							else
+								mess="In $h Stunden $(rund $m) Minuten "
+								tyxt="$tyxt$(echo $mess)"
+							fi
+							first=1
+						fi
+						tyxt="$tyxt $task"
+						echo $tyxt
+					fi
+				fi
+			fi
+		fi
+		read line
+	done))
+	echo "$out"
+	espeak -v german "$out"
+}
+
+function schedule {
+	h=$(date -d "+5 sec" +%H)
+	m=$(date -d "+5 sec" +%M)
+	s=$(date -d "+5 sec" +%S)
+	let m=m+5
+	if [ $s -ge 30 ] ;then
+		let m=m+1
+	fi
+	if [ $m -ge 60 ] ;then
+		let h=(h+1)%24
+		let m=m%60-m%5
+	fi
+	m=$(rund $m)
+	if [ ${#m} -eq 1 ] ;then
+		m=00
+	fi
+	at -f zeit_job "$h:$m"
+}
+
+espeak -v german "  Es ist jetzt $(tayme ' Uhr ' ' und ' ' Sekunden')"
+alerts 0 1 0 30
+schedule 5m
+

@@ -1,0 +1,30 @@
+#!/bin/bash
+if [ ${1:-"-v"} = "-v" ]
+then
+	VRB=true
+else
+	VRB=false
+fi
+if [ -f /tmp/secured ]
+then
+	if [ $(cat /tmp/secured) -eq 1 ]
+	then
+		if $VRB
+		then
+			echo "This machine is secure."
+		fi
+		exit 0
+	else
+		if $VRB
+		then
+			echo "This machine is insecure."
+		fi
+		exit 1
+	fi
+else
+	if $VRB
+	then
+		echo "This machine is insecure."
+	fi
+	exit 1
+fi

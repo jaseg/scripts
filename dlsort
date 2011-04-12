@@ -1,0 +1,79 @@
+#!/bin/bash
+
+cd
+find "Downloads/" -mindepth 1 -maxdepth 1 |(
+read line;
+while [ $? -eq 0 ]; do 
+	type=$(file -b --mime-type "$line")
+	ext=${line##*.}
+	# PDF FILES
+	if [ "$type" = "application/pdf" ]; then
+		pages=$(pdfinfo "$line"|grep Pages|cut -d" " -f 2-|sed "s/ //g")
+		if [ "$pages" -ge 60 ]; then
+			mv -f "$line" "Documents/archive/pdf/book size/"
+		else
+			mv -f "$line" "Documents/archive/pdf/paper size/"
+		fi
+	# DIRECTORIES
+	elif [ "$type" = "application/x-directory" ]; then
+		echo "Skipping directory \"$line\""
+	# SYMBOLIC LINKS
+	elif [ "$type" = "application/x-symlink" ]; then
+		echo "Skipping link \"$line\""
+	# AUDIO FILES
+	elif [ "${type%/*}" = "audio" -o "$ext" = "mp3" -o "$ext" = "ogg" ]; then
+		size=$(ls -s "$line"|cut -d" " -f1)
+		if [ $size -le 15000 ]; then
+			mv -f "$line" "Documents/archive/audio/music/"
+		else
+			mv -f "$line" "Documents/archive/audio/podcasts/"
+		fi
+	# WEB PAGES
+	elif [ "$ext" = "maff" -o "$ext" = "mht" ]; then
+		mv -f "$line" "Documents/archive/web pages/"
+	elif [ "$ext" = "maff" -o "$ext" = "maff" ]; then
+		mv -f "$line" "Documents/archive/web pages/"
+	elif [ "$ext" = "html" ]; then
+		echo -e "\\tHTML web page"
+		mv -f "$line" "Documents/archive/web pages/"
+		folderpre="${line%.*}"
+		if [ -d "${folderpre}_files" ]; then
+			echo -e "\\t\\tCorresponding folder"
+			mv -f "${folderpre}_files" "Documents/archive/web pages/"
+		elif [ -d "${folderpre}-Dateien" ]; then
+			echo -e "\\t\\tCorresponding folder"
+			mv -f "${folderpre}-Dateien" "Documents/archive/web pages/"
+		fi
+	# ARCHIVES
+	elif [ "$type" = "application/zip" -o "$type" = "application/x-gzip" -o "$type" = "application/x-tar" -o "$type" = "application/x-rar" -o "$type" = "application/x-bzip2" ]; then
+		mv -f "$line" "Documents/archive/divers/"
+	# ISO IMAGES
+	elif [ "$ext" = "iso" ]; then
+		mv -f "$line" "Documents/archive/software/"
+	#EXE FILES
+	elif [ "$ext" = "exe" ]; then
+		mv -f "$line" "Documents/archive/software/windows/"
+	#SOFTWARE
+	elif [ "$ext" = "deb" -o "$ext" = "rpm" -o "$type" = "text/x-shellscript" ]; then
+		mv -f "$line" "Documents/archive/software/"
+	elif [ "${type%/*}" = "image" ]; then
+		mv -f "$line" "Documents/archive/image/"
+	#VIDEO
+	elif [ "${type%/*}" = "video" ]; then
+		mv -f "$line" "Documents/archive/video/"
+	#INCOMPLETE DOWNLOADS
+	elif [ "$ext" = "part" ]; then
+		mv -f "$line" "Documents/archive/incomplete/"
+	elif [ "$ext" = "ppt" -o "$ext" = "odt" -o "$ext" = "xls" -o "$ext" = "doc" ]; then
+		mv -f "$line" "Documents/archive/text/"
+	elif [ "$type" = "application/x-empty" ]; then
+		mv -f "$line" "Documents/archive/incomplete/"
+	# IF NOTHING MATCHES
+	else
+		echo "$line - $ext - $type"
+		echo -e "\\tSomething else"
+		mv -f "$line" "Documents/archive/divers/"
+	fi
+	read line;
+done
+)

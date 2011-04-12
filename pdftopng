@@ -1,0 +1,1 @@
+for i in $(seq -w 01 198); do gs -dNOPAUSE -dBATCH -r300 -sDEVICE=pnggray -sOutputFile="pg_00$i.png" pg_00$i.pdf; done

@@ -1,0 +1,193 @@
+#!/bin/bash
+
+home=${3:-~}
+
+backup=${1:-"$home/backup/config"}
+config=${2:-"$home/dev/secconf"}
+
+if [ $(id -u) -ne 0 ]; then
+	echo "This script must run as root."
+	sudo $0 $backup $config $home
+	exit
+fi
+
+
+YELLOW="\033[1;33m"
+RED="\033[1;31m"
+
+echo -e "$YELLOW"
+echo "Securing network interfaces..."
+
+if [ -e "$backup" ]
+then if [ !	-d "$backup" ]
+	then	echo -e "$RED"
+			echo "The backup directory is not actually a directory."
+			echo -e "\033[0;39m"
+	fi
+else
+	mkdir -p "$backup"
+	echo "Created $backup"
+fi
+
+echo -e "$YELLOW"
+echo "Backup directory: $backup"
+echo "Config directory: $config"
+
+dte=$(date +%Y%m%d%H%M%S)
+mkdir "$backup/$dte"
+backup="$backup/$dte"
+
+DEVICES=$(ifconfig -a|grep -E "(eth)|(wlan)"|cut -d" " -f1|sort)
+
+echo "Using devices:"
+echo "$DEVICES"
+
+echo "$DEVICES" > $backup/devices
+
+#end preamble. stop services.
+
+/etc/init.d/network-manager stop > /dev/null
+echo -e "$YELLOW"
+echo "Stopped network-manager"
+
+/etc/init.d/smbd stop > /dev/null
+echo "Stopped samba services"
+
+/etc/init.d/ssh stop > /dev/null
+echo "Stopped ssh"
+
+{
+	/etc/init.d/bind9 stop > /dev/null
+	echo -e "$YELLOW"
+	if [ $? -eq 0 ]
+	then echo "Stopped bind9"
+	else echo "bind9 already stopped"
+	fi
+}&
+#this can be quite slow, therefore do it in background.
+
+/etc/init.d/tor start > /dev/null
+echo -e "$YELLOW"
+echo "Started tor if not already running"
+
+/etc/init.d/privoxy start > /dev/null
+echo -e "$YELLOW"
+echo "Started privoxy if not already running"
+
+/etc/init.d/postfix stop > /dev/null
+echo -e "$YELLOW"
+echo "Stopped postfix"
+
+/etc/init.d/ntp stop > /dev/null
+echo -e "$YELLOW"
+echo "Stopped ntp"
+
+/etc/init.d/mysql stop > /dev/null
+echo -e "$YELLOW"
+echo "Stopped MySQL"
+
+/etc/init.d/apache2 stop > /dev/null
+echo -e "$YELLOW"
+echo "Stopped apache2"
+
+#end service area.
+
+#disable the interfaces
+for dev in $DEVICES
+do	ifconfig "$dev" down
+	echo "Shut down $dev"
+	
+	#change mac
+	macchanger -s "$dev" | cut -d" " -f 3 > "$backup/${dev}_mac"
+	echo -e "$YELLOW"
+	echo "Backed up MAC address of $dev to $backup/${dev}_mac"
+	macchanger -a "$dev"
+	echo -e "$RED"
+	echo "Changed MAC address of $dev"
+done
+
+#iptables backup and configuration
+iptables-save -c > "$backup/iptables_save"
+echo -e "$YELLOW"
+echo "Backed up iptables to $backup/iptables_save"
+
+iptables -F OUTPUT
+iptables -F INPUT
+
+#ALLOW ssh
+iptables -A OUTPUT -p tcp -m state --state RELATED,ESTABLISHED -j ACCEPT
+#allow outgoing ssh connections
+iptables -A OUTPUT -p tcp -m tcp --dport 22 -m state --state NEW -j ACCEPT
+iptables -A OUTPUT -j DROP
+iptables -A INPUT  -p tcp -m state --state RELATED,ESTABLISHED -j ACCEPT
+#allow incoming ssh connections
+iptables -A INPUT  -p tcp -m tcp --sport 22 -m state --state NEW -j ACCEPT
+iptables -A INPUT  -j DROP
+echo -e "$RED"
+echo "Modded iptables"
+
+#modify hostname
+hostname > "$backup/hostname_backup"
+old_hostname=$(hostname)
+echo -e "$YELLOW"
+echo "Backed up hostname to hostname_backup"
+new_hostname=$(pwgen 10 1)
+hostname $new_hostname
+hostname > /etc/hostname
+cp /etc/hosts $backup/hosts
+hostsfile=$(sed "s/$old_hostname/$new_hostname/" /etc/hosts)
+echo "$hostsfile" > /etc/hosts
+echo -e "$RED"
+echo "Modded hostname: $new_hostname"
+
+#change nameserver?
+
+#use new smb.conf
+cp "/etc/samba/smb.conf" "$backup/smb.conf"
+echo -e "$YELLOW"
+echo "Backed up smb.conf to $backup/smb.conf"
+wgname=$(let rnd=$RANDOM%4+6; pwgen -0A 1 1 | tr [a-z] [A-Z] | tr -d \\n; pwgen $rnd 1)
+sed "s/^workgroup = .*$/workgroup = ${wgname}/g" "$config/smb.conf" | sed "s/^netbios name = .*$/netbios name = $(hostname)/g" > /etc/samba/smb.conf
+echo -e "$RED"
+echo "Copied secure smb.conf and modded samba netbios hostname/workgroup name: $wgname"
+
+#modify the ssh config and keys
+tar --remove-files -cf "$backup/ssh_hk.tar" /etc/ssh/ssh_host_* > /dev/null
+
+mv "$home/.ssh" "$backup/dotssh_cu" > /dev/null
+mv "/root/.ssh" "$backup/dotssh_rt" > /dev/null
+echo -e "$YELLOW"
+echo "Backed up ssh host keys to ssh_hk.tar"
+echo "Backed up .ssh dir for current user to dotssh_cu"
+echo "Backed up .ssh dir for root user to dotssh_rt"
+
+ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key -P "" > /dev/null
+ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key -P "" > /dev/null
+echo -e "$RED"
+echo "Replaced host keys"
+
+#re-up interfaces
+for dev in $DEVICES
+do	ifconfig "$dev" up
+	echo -e "$RED"
+	echo "Re-upped $dev"
+done
+
+#restart services
+/etc/init.d/smbd start > /dev/null
+echo "Started samba services"
+
+/etc/init.d/ssh start > /dev/null
+echo "Started ssh"
+
+echo "1" > /tmp/secured
+
+#clear history
+#history -c
+
+#finish
+wait
+echo -e "\033[1;32m"
+echo "Cleaned up. You may now configure your ip."
+echo -e "\033[0;39m"
+

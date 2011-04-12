@@ -1,0 +1,27 @@
+#!/bin/bash
+
+trap 'echo -e "\033[0;39m"' 0
+
+i=0
+
+while true
+do
+	nc -z 192.168.42.42 12345
+	if [ $? -eq 0 ]
+	then
+		echo -e "\033[1;32m$i\tCONNECTED"
+		date
+		echo
+		# -n 2 /dev/rfcomm0 >> coordlist_client
+		play beep.wav 2> /dev/null
+	else
+		echo -e "\033[1;31m$i\tDISCONNECTED"
+		date
+		echo
+		#tail -n 2 /dev/rfcomm0 >> coordlist_client
+		play beep2.wav 2> /dev/null
+	fi
+	let i=i+1
+	sleep 0.5
+done
+

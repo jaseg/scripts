@@ -1,0 +1,12 @@
+#!/bin/bash
+#date >> /home/jaseg/testfile
+#echo $1 >> /home/jaseg/testfile
+if [ -z $1 ]
+then	echo "Need a pathname. For details, look at the source."
+	exit 1
+fi
+(date; echo $1) >> /tmp/schooltex_output 
+pushd . &> /dev/null
+cd ${1%/*}
+pdflatex ${1##*/}
+popd &> /dev/null

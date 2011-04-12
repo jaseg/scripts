@@ -1,0 +1,11 @@
+#!/bin/bash
+xkbcomp - $DISPLAY<<EOF
+xkb_keymap {
+xkb_keycodes  { include "evdev+aliases(qwertz)"};
+xkb_types     { include "complete"};
+xkb_compat    { include "complete"};
+xkb_symbols   { include "pc+de+inet(evdev)+group(alt_shift_toggle)+level3(ralt_switch)+compose(lwin)+capslock(escape)"    };
+xkb_geometry  { include "pc(pc104)"};
+};
+EOF
+xmodmap -e "add mod4 = Multi_key"

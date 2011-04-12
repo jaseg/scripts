@@ -1,0 +1,121 @@
+#!/bin/bash
+
+
+home=${3:-~}
+
+backup=${1:-"$home/backup/config"}
+config=${2:-"$home/dev/secconf"}
+
+if [ $(id -u) -ne 0 ]; then
+	echo "This script must run as root."
+	sudo $0 $backup $config $home
+	exit
+fi
+
+if [ ! -d "$backup" ]
+then	echo "The backup directory is noexistent!"
+		exit 1
+fi
+
+YELLOW="\033[1;33m"
+RED="\033[1;31m"
+
+dte=$(ls "$backup"| sort | tail -n 1)
+backup="$backup/$dte"
+#dte=$(find -maxdepth 1 -name "iptables_save_*" | sort | tail -n 1 | sed "s/\\.\\/iptables_save_//g")
+echo -e "$YELLOW"
+echo "Using backups from $dte"
+
+DEVICES=$(cat $backup/devices)
+
+#stop services
+/etc/init.d/smbd stop > /dev/null
+echo "Stopped samba services"
+
+/etc/init.d/ssh stop > /dev/null
+echo "Stopped ssh"
+
+#shut down interfaces
+for dev in $DEVICES
+do	ifconfig $dev down
+	echo "Shut down $dev"
+	
+	mac=$(cat "$backup/${dev}_mac")
+	macchanger -m "$mac" $dev
+	#rm "$backup/${dev}_mac"
+	echo "Restored MAC address of $dev: $mac"
+done
+
+#restore old iptables config
+iptables-restore -c < "$backup/iptables_save"
+#rm "$backup/iptables_save"
+echo -e "$RED"
+echo "Restored iptables"
+
+#restore hostname
+old_hostname=$(cat "$backup/hostname_backup")
+new_hostname=$(hostname)
+hostname "$old_hostname"
+echo "$old_hostname" > /etc/hostname
+hostsfile=$(sed "s/$new_hostname/$old_hostname/" /etc/hosts)
+echo "$hostsfile" > /etc/hosts
+#rm "hostname_backup-$dte"
+echo "Restored hostname: $old_hostname"
+
+#restore samba configuration
+mv -f "$backup/smb.conf" "/etc/samba/smb.conf"
+echo "Restored smb.conf"
+
+#restore ssh config and keys
+
+#tar --remove-files -cf "$backup/ssh_hk.tar" /etc/ssh/ssh_host_* > /dev/null
+#mv "$home/.ssh" "$backup/dotssh_cu" > /dev/null
+#mv "/root/.ssh" "$backup/dotssh_rt" > /dev/null
+
+tar -xf "$backup/ssh_hk.tar" -C /etc/ssh/ > /dev/null
+#rm "ssh_hk-${dte}.tar"
+mv "$backup/dotssh_cu" "$home/.ssh" > /dev/null
+mv "$backup/dotssh_rt" "/root/.ssh" > /dev/null
+echo "Restored ssh host keys and .ssh dirs for root and the current user"
+
+#re-up devices
+for dev in $DEVICES
+do	ifconfig $dev up
+	echo -e "$RED"
+	echo "Re-upped $dev"
+done
+
+#restart services
+/etc/init.d/smbd stop > /dev/null
+echo -e "$RED"
+echo "Started samba services"
+
+/etc/init.d/network-manager start > /dev/null
+echo "Started network-manager"
+
+/etc/init.d/ssh start > /dev/null
+echo "Started ssh"
+
+#/etc/init.d/postfix start > /dev/null
+#echo "Started postfix"
+
+/etc/init.d/ntp start > /dev/null
+echo "Started ntp"
+
+/etc/init.d/mysql start > /dev/null
+echo "Started MySQL"
+
+/etc/init.d/apache2 start > /dev/null
+echo "Started apache2"
+
+echo "0" > /tmp/secured
+
+#clean history
+#history -c
+
+#finish
+wait
+echo -e "\033[1;32m"
+echo "Cleaned up."
+echo -e "\033[0;39m"
+

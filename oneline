@@ -1,0 +1,15 @@
+#!/bin/bash
+while true
+do	clear
+	idx=0
+	cat $@|
+	while read line
+	do	if [ $idx -eq 1 ]
+		then	last=$line
+		else	echo -n "$last"
+			echo -n "$line"
+			sleep .05s
+		fi
+		let idx=(idx+1)%2
+	done
+done

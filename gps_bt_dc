@@ -1,0 +1,4 @@
+#!/bin/bash
+
+sudo hcitool dc 00:0D:B5:82:BC:E4
+sudo rfcomm release 00:0D:B5:82:BC:E4

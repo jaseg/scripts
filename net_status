@@ -1,0 +1,4 @@
+#!/bin/bash
+net_is_secure
+echo
+sudo iptables -L

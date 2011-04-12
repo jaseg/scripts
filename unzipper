@@ -1,0 +1,6 @@
+#!/bin/bash
+
+find -name "*.zip"|(
+while read line; do
+	unzip $line -d ${line%.zip}
+done)

@@ -1,0 +1,14 @@
+#!/bin/bash
+#Shows the current time in big ASCII art and says the time every 10 minutes.
+
+#(while true; do
+#	espeak  -v german "Es ist jetzt $(date +%H|sed 's/^0*//1') Uhr 
+#					$(date +%M|sed 's/^0*//1')." 2> /dev/null
+#	sleep 10m
+#done) &
+while true; do
+	clear
+	toilet -f big "$(date +%H:%M:%S)"
+	du -sh /media/Candela
+	sleep 1s
+done

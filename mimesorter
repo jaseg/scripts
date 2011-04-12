@@ -1,0 +1,145 @@
+#!/bin/bash
+
+function printhelp {
+	echo "Mimesorter v0.1 by Jaseg"
+	echo "Usage: mimesorter [-lsd] [-i input directory] [-o output directory]"
+	echo
+	echo -e "\\t-l\\t\\tDo only make only symbolic links; do not copy files"
+	echo -e "\\t-s\\t\\tPrint this help and exit"
+	echo -e "\\t-d\\t\\tLink to directories containing files instead to files (implicates -l)"
+	echo -e "\\t-i input dir\\tSet input dir. Default is './' "
+	echo -e "\\t-o output dir\\tSet output dir. Default is '../'"
+}
+
+IN="./"
+OUT="../"
+sha1=0
+links=0
+dirlinks=0
+i=1
+
+while getopts "lsdi:o:" param ; do
+  	case $param in
+   		"?")
+        	printhelp
+			exit 1
+			;;
+		"s")
+			sha1=1
+			;;
+		"l")
+			links=1
+			;;
+		"d")
+			dirlinks=1
+			;;
+		"i")
+			if [ ! -z $OPTARG ]; then
+				IN=$OPTARG
+			else
+				echo "Too few arguments."
+    	    	printhelp
+				exit 1
+			fi
+			;;
+		"o")
+			if [ ! -z $OPTARG ]; then
+				OUT=$OPTARG
+			else
+				echo "Too few arguments."
+    	    	printhelp
+				exit 1
+			fi
+			;;
+	esac
+done
+
+OUT="${OUT}sorted/"
+
+if [ ! -e "$OUT" ]; then
+	mkdir -p "$OUT"
+fi
+
+echo "sha1sum                                  mimetype                                 size       filename">"${OUT}/index"
+
+echo "Counting files"
+#nof=$(find Desktop/|grep -c ".*")
+echo "Sorting $nof files"
+
+pwd=$(pwd)/
+
+f=0
+echo "IN: $IN"
+find "$IN"|(
+	read file;
+	while [ $? -eq 0 ]; do
+		mime=$(file -bi "$file")
+		if [ ! -d "$file" ]; then
+			if [ $sha1 -eq 1 ]; then
+				shasum=$(sha1sum -b "$file"|cut -d" " -f1)
+			else
+				shasum="                                        "
+			fi
+			ine=$(echo "$IN"|sed "s/\\//\\\\\\//g")
+			prepath=$(echo "$file"|sed "s/$ine//")
+			path=$(echo "$prepath"|sed "s/[^\/]\+$//")
+			mimep=$(echo "$mime"|sed "s/\\//_/g")
+			if [ $dirlinks -eq 1 ]; then
+				tmppath="${OUT}${mimep}/tmp/$path"
+				if [ ! -e "$tmppath" ]; then
+					linkpath="${OUT}${mimep}/links/"
+					numpath="${OUT}${mimep}/num/"
+					mkdir -p "$tmppath"
+					mkdir -p "$numpath"
+					mkdir -p "$linkpath"
+					nextlink=$[$(ls "$numpath"|sort -g|tail -n 1)+1]
+					touch "${numpath}${nextlink}"
+					pathlast=$(echo "${path%/}"|sed "s/.*\///")
+					ln -s "$path" "${linkpath}${nextlink} ${pathlast}"
+				fi
+			else
+				if [ ! -d "${OUT}${mimep}$path" ]; then
+					mkdir -p "${OUT}${mimep}/$path"
+				fi
+				if [ $links -eq 0 ]; then
+					cp "$file" "${OUT}${mimep}/$prepath"
+				else
+					ln -s "$pwd$file" "${OUT}${mimep}/$prepath"
+				fi
+			fi
+		else
+			shasum="                                        "
+		fi
+		size=$(ls -lhd "$file"|cut -d" " -f5)
+		while [ ${#size} -lt 10 ]; do
+			size="$size "
+		done
+		snum=$[40-${#mime}]
+		i=0
+		spaces=""
+		while [ $i -lt $snum ]; do
+			spaces="${spaces} "
+			i=$[$i+1]
+		done
+		echo "${shasum} ${mime}${spaces} $size $file">>"${OUT}/index"
+		
+		f=$[$f+1]
+		if [ $[$f%100] -eq 0 ]; then
+			echo "$f files copied; $[$nof-$f] files remaining"
+		fi
+		
+		read file
+	done
+)
+a=1
+if [ $dirlinks -eq 1 ]; then
+	find $OUT -maxdepth 1 -type d|(
+		read file
+		while [ $? -eq 0 ]; do
+			rm -r "${file}/tmp"
+			rm -r "${file}/num"
+			read file
+		done
+	)
+fi
+

@@ -1,0 +1,18 @@
+#!/bin/bash
+debug_out=/tmp/arbeittex.$$
+if [ -z $1 ]
+then	echo "Need a pathname. For details, look at the source."
+	exit 1
+fi
+(date; echo $1) >> $debug_out
+pushd . &> /dev/null
+cd ${1%/*}
+pdflatex ${1##*/}
+pn=$(pdftk "${1%%tex}pdf" dump_data|grep Pages|cut -d" " -f2)
+echo $pn >> $debug_out
+opn=$(cat /home/jaseg/opn)
+if [ $pn -ne $opn ]
+then	espeak "$(( $2-$pn )) pages to go!"
+	echo $pn > $debug_out
+fi
+popd &> /dev/null

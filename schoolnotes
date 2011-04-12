@@ -1,0 +1,22 @@
+#!/bin/bash
+
+if [ -z "$1" ]
+then    echo "The subject has to be given."
+        exit 1
+fi
+subj=$(echo $1|tr A-Z a-z)
+Subj="$(echo $subj|cut -c1|tr a-z A-Z)$(echo $subj|cut -c2-)"
+dte=$(date +%Y-%m-%d)
+if mkdir "$HOME/Documents/schule/$subj/$dte"
+then	echo "Using subject $Subj on $dte"
+else	echo "The given subject \"$subj\" does not exist"
+	exit 1
+fi
+sed "s/DATE/$(date +%d.%m.%Y)/;s/SUBJECT/$Subj/" "$HOME/Documents/schule/template.tex" > "$HOME/Documents/schule/$subj/$dte/$subj.tex"
+pushd . &> /dev/null
+cd "$HOME/Documents/schule/$subj/$dte"
+pdflatex "$HOME/Documents/schule/$subj/$dte/$subj.tex" &> /dev/null
+popd &> /dev/null
+#incronaddtex "$subj/$dte/$subj.tex"
+#evince "$HOME/Documents/schule/$subj/$dte/$subj.pdf" &> /dev/null & #formerly okular
+vim "$HOME/Documents/schule/$subj/$dte/$subj.tex" #&> /dev/null & #&& incrondeltex "$subj/$dte/$subj.tex" & #formerly kile

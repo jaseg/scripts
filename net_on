@@ -1,0 +1,7 @@
+#!/bin/bash
+if sudo iptables -D OUTPUT -j DROP
+then
+	echo
+else
+	echo "Network was not switched off using nw"
+fi

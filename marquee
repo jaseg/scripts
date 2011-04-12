@@ -1,0 +1,11 @@
+#!/bin/bash
+trap "tput cvvis" 0
+tput civis
+len=160
+text=$(head -n 1 /usr/local/share/couchdb/www/script/test/lorem.txt)
+for i in $(seq 0 $(( ${#text}-$len )) )
+do	clear
+	echo "${text:$i:$len}"
+	date
+	sleep 0.1s
+done

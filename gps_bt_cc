@@ -1,0 +1,4 @@
+#!/bin/bash
+
+sudo hcitool cc 00:0D:B5:82:BC:E4
+sudo rfcomm bind /dev/rfcomm0 00:0D:B5:82:BC:E4

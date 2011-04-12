@@ -1,0 +1,8 @@
+#!/bin/bash
+datestring=$([[ "$@" =~ ^-.* ]] && sed 's/[0-9] /\0d/g;s/[ymwd]/\0 -/g;s/w /weeks /g;s/d /days /g;s/m /months /g;s/y /years /g;s/ - *$//'<<<"$@ ")
+true ${datestring:=$(sed "s/^ *[0-9]\+ *$/$(date +%b) \0/;s/^[0-9]\+-[0-9]\+ *$/$(date +%y)-\0/"<<<"$@")}
+false ${datestring:=now}
+date=$(date -d "$datestring" +%y-%m-%d) || exit 2
+[ $date != $(date +%y-%m-%d) -a ! -e ~/notes/log/$date ] && echo "File does not exist." && exit 1
+echo $date
+vi ~/notes/log/$date

@@ -1,0 +1,46 @@
+#!/bin/bash
+if [ -z $1 ]
+then
+	echo "You must provide a command."
+	echo "Usage: nw [command] [options]"
+	exit 1
+fi
+if [ $1 = "on" ]
+then	net_on
+elif [ $1 = "off" ]
+then	net_off
+elif [ $1 = "st" -o $1 = "status" -o $1 = "state" ]
+then	net_status
+elif [ $1 = "sec" ]
+then
+	if net_is_secure
+	then
+		echo "The machine has already been secured"
+	else
+		net_sec
+	fi
+elif [ $1 = "insec" ]
+then	net_insec
+elif [ $1 = "resec" ]
+then
+	if net_is_secure
+	then
+		net_sec /tmp/backup/config
+		sudo rm -r "/tmp/backup/config/$(ls /tmp/backup/config|grep -E '[0-9]{14}'|sort|tail -n 1)"
+	else
+		echo "The machine has not yet been secured."
+	fi
+elif [ $1 = "issec" ]
+then
+	net_is_secure
+elif [ $1 = "newmac" ]
+then
+	net_changemacs
+elif [ $1 = "key" ]
+then
+	wlankey
+else
+	echo "nw command not found"
+	exit 1
+fi
+

@@ -1,0 +1,5 @@
+#!/bin/bash
+backupdate="$(date -u)"
+tar -c --lzma -C ~ -X ~/.backup.exclude.list --exclude-tag .backup.exclude.tag $(<~/.backup.include.list)|
+gpg -r XXXXXXXX -r YYYYYYYY -o ~/backup/data/$(date +%y-%m-%d).full.tar.xz.gpg -e
+echo "$backupdate">~/.backup.last.date

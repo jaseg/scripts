@@ -1,0 +1,60 @@
+#!/bin/bash
+
+cv=$(tput civis)
+echo -e $cv
+bce=$(tput bce 1)
+res=$(tput reset)
+#echo $bce
+clear
+r=1
+c=$(tput clear)
+fn=$(tput setaf 7)
+bn=$(tput setab 0)
+fe=0
+be=0
+feg=$(tput setaf fe)
+beg=$(tput setab be)
+d=0
+#i=0
+p=$(tput cup 0 0)
+while [ $r -eq 1 ]; do
+	v="                                                                       $(date +%H:%M:%S)     "
+	if [ $d -eq 1 ]; then
+		d=0
+		echo -e $c$res$cv #\\c, bn, fn, (bce)
+		let be=($be+1)%8
+		if [ $be -eq 0 ]; then
+			let fe=($fe+1)%8
+		fi
+		if [ $be -eq $fe ]; then
+			let be=($be+1)%8
+		fi
+		if [ $be -eq $fe ]; then
+			let fe=($fe+1)%8
+		fi
+		feg=$(tput setaf $fe)
+		beg=$(tput setab $be)
+	fi
+#	let q=$(date +%S)%3
+	if [ $(date +%S) -eq 0 ] ; then
+		echo -e $feg$beg$c\\c
+		toilet -t -f big "$v"
+		d=1
+	else
+		echo -e $p\\c
+		toilet -t -f big --gay "$v"
+	fi
+	read -t 1
+	r=$?
+	let i=$i+1
+#	if [ $i -eq 60 ]; then
+#		i=0
+#		ech
+#	fi
+done
+clear
+echo -e Welcome back.\\c
+let w=$(tput cols)-19
+tput cup 0 $w
+echo $(date +"%d.%m.%Y %H:%M:%S")
+tput cnorm
