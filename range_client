@@ -1,5 +1,5 @@
 #!/bin/bash
-
+#Script for audibly and visually testing the range of wlan hardware
 trap 'echo -e "\033[0;39m"' 0
 
 i=0

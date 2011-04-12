@@ -1,4 +1,5 @@
 #!/bin/bash
+#This script is the result of some rather boring lesson. It just scrolls the lorem ipsum of the debian couchdb package over the screen. Unfortunately the screen size (columns) must be hardcoded, since I did not include an automatic detection via tput.
 trap "tput cvvis" 0
 tput civis
 len=160

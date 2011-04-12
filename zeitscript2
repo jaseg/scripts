@@ -1,4 +1,5 @@
 #!/bin/bash
+#Tells the current time in full german sentences
 
 function short {
 	s=$(date -d "+5 sec" $1)

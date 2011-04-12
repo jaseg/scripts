@@ -1,4 +1,6 @@
 #!/bin/bash
+#schoolnotes
+#create a note file for some subject and the current date from a template and open it
 
 if [ -z "$1" ]
 then    echo "The subject has to be given."

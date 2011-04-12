@@ -1,4 +1,5 @@
 #!/bin/bash
+#This script has been written to mount and dismount an luks-encrypted hard drive. I needed it because back then on my ubuntu the hard drive would not properly survive a suspend, with the links in /dev/mapper being unreadable as well as undeletable. Although it is *not* the most elegant solution at the time it worked.
 if [ $(id -u) -ne 0 ]; then
         echo "This script must run as root."
         sudo $0

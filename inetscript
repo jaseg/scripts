@@ -1,3 +1,4 @@
+#I do not know exactly what the purpose of these lines was, but I think I used them to share my phone's internet connection (usb0) while tethered via usb with the computers in our lan in the days before the crappy vodafone android version got the wlan hotspot functionality.
 sudo iptables -A FORWARD -i usb0 -o eth0 -s 192.168.1.0/24 -m conntrack --ctstate NEW -j ACCEPT
 sudo iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 sudo iptables -A POSTROUTING -t nat -j MASQUERADE 

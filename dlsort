@@ -1,4 +1,5 @@
 #!/bin/bash
+#This script sorts everything in ~/Downloads by file type and in case of pdfs/mp3s page number/length into a folder hierarchy.
 
 cd
 find "Downloads/" -mindepth 1 -maxdepth 1 |(

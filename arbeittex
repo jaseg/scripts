@@ -1,4 +1,5 @@
 #!/bin/bash
+#I wrote this script to motivate myself doing some larger homework. I do not remember exactly how it is called, but probably it will be via incron or cron. Every time the pdf file compiled from the tex source grows one page, espeak tells the remaining pages.
 debug_out=/tmp/arbeittex.$$
 if [ -z $1 ]
 then	echo "Need a pathname. For details, look at the source."
@@ -9,8 +10,8 @@ pushd . &> /dev/null
 cd ${1%/*}
 pdflatex ${1##*/}
 pn=$(pdftk "${1%%tex}pdf" dump_data|grep Pages|cut -d" " -f2)
-echo $pn >> $debug_out
-opn=$(cat /home/jaseg/opn)
+echo $pn >> ~/.arbeit.oldpagenum
+opn=$(cat ~/.arbeit.oldpagenum)
 if [ $pn -ne $opn ]
 then	espeak "$(( $2-$pn )) pages to go!"
 	echo $pn > $debug_out

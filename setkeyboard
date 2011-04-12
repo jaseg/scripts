@@ -1,4 +1,5 @@
 #!/bin/bash
+#Used (on *my* computer, probably not directly portable) to make an escape key out of the tab key (e.g. for use with vi or emacs) and to properly assign my "windows key" to "mod4" for use with the awesome window manager.
 xkbcomp - $DISPLAY<<EOF
 xkb_keymap {
 xkb_keycodes  { include "evdev+aliases(qwertz)"};

@@ -1,6 +1,6 @@
 #!/bin/bash
-#date >> /home/jaseg/testfile
-#echo $1 >> /home/jaseg/testfile
+#Helper script for "schoolnotes"
+
 if [ -z $1 ]
 then	echo "Need a pathname. For details, look at the source."
 	exit 1

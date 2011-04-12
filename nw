@@ -1,4 +1,5 @@
 #!/bin/bash
+#Script for accessing the net_* scripts
 if [ -z $1 ]
 then
 	echo "You must provide a command."

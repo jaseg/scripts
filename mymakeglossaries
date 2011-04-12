@@ -1,3 +1,0 @@
-#!/bin/bash
-makeglossaries ${@%%.tex}
-echo done.

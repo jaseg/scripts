@@ -1,8 +1,9 @@
 #!/bin/bash
+#This iptables rule redirects every request coming in on port 80 to another port on localhost. I used this for a prank temporarily displaying "you have reached the end of the internet" on every request in our computer lab.
 
 if [ $(id -u) -ne 0 ]; then
 	echo "This script must run as root."
 	exit 1
 fi
 
-iptables -t nat -A PREROUTING -i wlan0 -p tcp --dport 80 -j DNAT --to-destination 192.168.0.123:8080
+iptables -t nat -A PREROUTING -i wlan0 -p tcp --dport 80 -j DNAT --to-destination 127.0.0.1:8080

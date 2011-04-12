@@ -1,5 +1,5 @@
 #!/bin/bash
-
+#This script change the mac addresses of all network devices (at least of all with names beginning with either "eth" or "wlan"). The current macs are backed up to /tmp/. Note: A more permanent backup is not necessary since normal network devices reset their macs on each reboot.
 if [ $(id -u) -ne 0 ]; then
 	echo "This script must run as root."
 	sudo $0

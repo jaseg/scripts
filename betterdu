@@ -1,2 +1,3 @@
 #!/bin/bash
+#This script is a just-for-fun re-implementation of "du"
 ls -ARs $@|tail -n +2|sed 's/^ *//'|cut -d' ' -f1|grep -E '^[0-9]'|sed 's/$/+/'|cat -s|xargs echo|sed 's/ //g;s/+$//'|bc

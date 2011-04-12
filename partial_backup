@@ -1,4 +1,5 @@
 #!/bin/bash
+#This script does the same as full_backup with the modification that it stores only the files changed since the last (either partial or full) backup in the archive.
 backupdate="$(date -u)"
 lastbackupdate="$(<~/.backup.last.date)"
 tar -c --lzma -C ~ -X ~/.backup.exclude.list --exclude-tag .backup.exclude.tag -N "$lastbackupdate" $(<~/.backup.include.list)|

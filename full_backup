@@ -1,5 +1,6 @@
 #!/bin/bash
+#This script generates an encrypted and compressed tar archive containing the files of all folders listed in ~/.backup.include.list . Folders containing a file named .backup.exclude.tag are ignored, as well as all folders listed in ~/.backup.exclude.list . The output is stored in ~/backup/ and the current date is written to ~/.backup.last.date for use in partial_backup
 backupdate="$(date -u)"
 tar -c --lzma -C ~ -X ~/.backup.exclude.list --exclude-tag .backup.exclude.tag $(<~/.backup.include.list)|
-gpg -r XXXXXXXX -r YYYYYYYY -o ~/backup/data/$(date +%y-%m-%d).full.tar.xz.gpg -e
+gpg -r XXXXXXXX -r YYYYYYYY -o ~/backup/$(date +%y-%m-%d).full.tar.xz.gpg -e
 echo "$backupdate">~/.backup.last.date

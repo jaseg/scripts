@@ -1,5 +1,5 @@
 #!/bin/bash
-
+#See net_sec. Does the reverse.
 
 home=${3:-~}
 

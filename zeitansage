@@ -1,4 +1,5 @@
 #!/bin/bash
+#Tells the current time in complete german sentences. Rounds the value to 5 minutes accuracy and schedules itself using at (thus beware, if you call this script you have to manually remove the "at" entries.
 
 function short {
 	s=$(date -d "+5 sec" $1)
@@ -31,7 +32,7 @@ function rund {
 	echo $b
 }
 
-function tayme {
+function time2 {
 	h=$(short +%I)
 	m=$(short +%M)
 	s=$(short +%S)
@@ -141,7 +142,7 @@ function schedule {
 	at -f zeit_job "$h:$m"
 }
 
-espeak -v german "  Es ist jetzt $(tayme ' Uhr ' ' und ' ' Sekunden')"
+espeak -v german "  Es ist jetzt $(time2 ' Uhr ' ' und ' ' Sekunden')"
 alerts 0 1 0 30
 schedule 5m
 

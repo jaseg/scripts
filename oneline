@@ -1,4 +1,5 @@
 #!/bin/bash
+#Scroll a text fast over the screen
 while true
 do	clear
 	idx=0

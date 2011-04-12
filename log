@@ -1,4 +1,6 @@
 #!/bin/bash
+#Simple note manager
+#This script may be used as a simple note manager. When called without arguments, it will launch vi with a file for the current date (all files are stored in ~/notes/log/). To open recent files, a syntax of "-{nm}" may be used where n is any positive natural number and m is a multiplicator (nothing for 1 day, w for weeks, m for months and y for years). Instead "months", "days", "weeks" and "years" may also be written. The command then opens the note file for the date ... days ago. To access the notes for a specific date, type "log [day-of-month]" for the current month, "log [month]-[day-of-month]" for the current year and "log [year]-[month]-[day-of-month]" for any date _in the past_.
 datestring=$([[ "$@" =~ ^-.* ]] && sed 's/[0-9] /\0d/g;s/[ymwd]/\0 -/g;s/w /weeks /g;s/d /days /g;s/m /months /g;s/y /years /g;s/ - *$//'<<<"$@ ")
 true ${datestring:=$(sed "s/^ *[0-9]\+ *$/$(date +%b) \0/;s/^[0-9]\+-[0-9]\+ *$/$(date +%y)-\0/"<<<"$@")}
 false ${datestring:=now}

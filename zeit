@@ -9,6 +9,5 @@
 while true; do
 	clear
 	toilet -f big "$(date +%H:%M:%S)"
-	du -sh /media/Candela
 	sleep 1s
 done

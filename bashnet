@@ -1,4 +1,5 @@
 #!/bin/bash
+#This script is just an educational one. It does some HTTP communication using only bash and grep.
 exec 3<>"/dev/tcp/$(dig www.google.de|grep '^[^;].*IN\WA' -m 1|cut -f 5)/80"
 echo -e "GET / HTTP/1.1\nHost: www.google.de\nConnection: close\n" >&3
 while read line

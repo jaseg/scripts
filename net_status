@@ -1,4 +1,5 @@
 #!/bin/bash
+#For use with net_sec
 net_is_secure
 echo
 sudo iptables -L

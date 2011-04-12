@@ -1,4 +1,5 @@
 #!/bin/bash
+#The original intent of this script was to "pseudonymize" the computer to a network effectively constructing a new "identity" when in a public wlan hostpot etc. Although the script is quite large and I did test it somehow, it does not yet work. I do not assume any liability for any weird things this code does.
 
 home=${3:-~}
 
