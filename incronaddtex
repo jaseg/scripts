@@ -1,0 +1,9 @@
+#!/bin/bash
+#Helper script for "schoolnotes"
+
+if [ -z "$1" ]
+then	echo "Need an argument. See the source for details."
+	exit 1
+fi
+echo "~/Documents/schule/$1 IN_CLOSE_WRITE ~/scripts/schooltex \$@" >> /var/spool/incron/username
+sudo -u username incrontab -d

@@ -1,0 +1,9 @@
+#!/bin/bash
+#Helper script for "schoolnotes"
+
+if [ -z "$1" ]
+then	echo "Need an argument. See the source for details."
+	exit 1
+fi
+grep -F "$1" -v /var/spool/incron/jaseg > /var/spool/incron/jaseg
+sudo -u jaseg incrontab -d
