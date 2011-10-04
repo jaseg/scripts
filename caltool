@@ -1,0 +1,63 @@
+#!/bin/bash
+
+function schedule {
+crontab<<<"$(crontab -l)\
+$@"
+}
+
+#WARNING: Using "next" and "at" together may yield funny results.
+function next {
+	DATE="$1"
+	#armor to hinder reminders from triggering the scheduling of further events
+	if [ $CALTOOL_RUN -ge 0 ]
+	then schedule "$(date -d "$1" '+%M %H %d %m *')" "/home/jaseg/scripts/caltool $CALTOOL_SCRIPT $CALTOOL_RUN $TAGS"
+	fi
+}
+
+function repeats {
+	if [ $CALTOOL_RUN -lt $1 -a $CALTOOL_RUN -gt 0 ]
+	then next $2
+	fi
+}
+
+function remind {
+	if [ -z "$DATE" ]
+	then echo '"at" must be called before "remind"'
+	fi
+	if [ $CALTOOL_RUN -eq 0 ]
+	then
+		iteration = 0
+		for i in $@
+		do	schedule "$(date -d "$DATE - $i" '+%M %H %d %m *')" "/home/jaseg/scripts/caltool $CALTOOL_SCRIPT -$iteration $TAGS,REMINDER"
+			let iteration=iteration+1
+		done
+	fi
+}
+
+#Like "next" but only schedules the script once at setup
+function at {
+	DATE="$1"
+	if [ $CALTOOL_RUN -eq 0 ]
+	then next "$DATE"
+	fi
+}
+
+function remove {
+	#Not going to check the tags since they could change (who knows what that could be good for)
+	crontab -l|grep -v "/home/jaseg/scripts/caltool $CALTOOL_SCRIPT $CALTOOL_RUN"|crontab
+}
+
+CALTOOL_SCRIPT="$1"
+if [ -z "$2" ]
+then
+	CALTOOL_RUN = 0
+else
+	CALTOOL_RUN=$(($2+1))
+fi
+TAGS="$3"
+
+if [ $CALTOOL_RUN -gt 0 ]
+then remove
+fi
+
+source "$1"
