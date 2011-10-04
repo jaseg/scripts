@@ -1,0 +1,66 @@
+#!/bin/bash
+
+user="crlf"
+
+function irccmd {
+	echo -e "$1\r" >&3
+}
+
+function send_message {
+	if [ -n "$2" ]; then
+		irccmd "PRIVMSG $1 :$2"
+	fi
+}
+
+function parse_command {
+	if [[ "$1" =~ /join\ ([^ ]*) ]]; then
+		chan=${BASH_REMATCH[1]}
+		if [ -n "$chan" ]; then
+			if [[ ! "$chan" =~ ^# ]]; then
+				chan="#$chan"
+			fi
+			echo "Joining $chan..."
+			irccmd "JOIN $chan"
+		fi
+		return 1
+	fi
+	return 0
+}
+
+function screen_print {
+	echo "$@"
+}
+
+function exittrap {
+	echo 'Exiting.'
+	kill -9 $slavepid 2>/dev/null
+	exec 3>&-
+} 
+
+#open the socket
+exec 3<>"/dev/tcp/irc.telecomix.org/6667"
+#login
+irccmd "NICK $user"
+irccmd "USER $user * * :$user"
+#process user input
+{
+	while read -e line
+	do	if [[ "$line" =~ ^/ ]]
+		then parse_command "$line"
+		else send_message $chan "$line"
+		fi
+	done<&1
+}&
+slavepid=$!
+trap exittrap 0
+
+{ #process server messages
+	while read line
+	do	#echo "DEBUG $line"
+		if [[ "$line" =~ ^[^\ ]*\ [0-9]*\ (.*) ]]; then
+			screen_print "${BASH_REMATCH[1]}"
+		elif [[ "$line" =~ ^:([^\!]*)\![^:]*:(.*) ]]; then
+			screen_print "<${BASH_REMATCH[1]}> ${BASH_REMATCH[2]}"
+		fi
+	done<&3
+}
